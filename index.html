@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Builder - 智能简历生成器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-primary: #fafbfc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a68;
+            --text-muted: #8b8ba3;
+            --accent-primary: #4361ee;
+            --accent-secondary: #7209b7;
+            --accent-gradient: linear-gradient(135deg, #4361ee 0%, #7209b7 50%, #f72585 100%);
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        [data-theme="dark"] {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #252542;
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8d1;
+            --text-muted: #6b6b8d;
+            --border-color: #2d2d4a;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .template-selector {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-tertiary);
+            padding: 0.25rem;
+            border-radius: 12px;
+        }
+        .template-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .template-btn:hover { color: var(--text-primary); }
+        .template-btn.active {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        .icon-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        .ai-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .ai-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1600px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            min-height: calc(100vh - 100px);
+        }
+        .editor-panel {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 140px);
+        }
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+        }
+        .section-title i { color: var(--accent-primary); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        textarea.form-input { resize: vertical; min-height: 100px; }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            min-height: 50px;
+        }
+        .tag {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+        }
+        .tag-remove { cursor: pointer; opacity: 0.7; }
+        .tag-remove:hover { opacity: 1; }
+        .tag-input {
+            flex: 1;
+            min-width: 100px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            outline: none;
+        }
+        .entry-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .entry-title { font-weight: 600; color: var(--text-primary); }
+        .entry-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        .entry-btn.edit { background: var(--accent-primary); }
+        .entry-btn.delete { background: #ef4444; }
+        .add-btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px dashed var(--border-color);
+            background: transparent;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .add-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(67, 97, 238, 0.05);
+        }
+        .preview-panel {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .preview-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            box-shadow: var(--shadow-lg);
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 210/297;
+        }
+        .preview-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .preview-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .preview-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        .preview-btn.primary {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+        }
+        .preview-btn.primary:hover {
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+        }
+        .resume {
+            padding: 0;
+            font-size: 10px;
+            color: #333;
+            line-height: 1.5;
+        }
+        /* Classic Template */
+        .resume.classic { font-family: Georgia, serif; }
+        .resume.classic .resume-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 30px;
+        }
+        .resume.classic .resume-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        .resume.classic .resume-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        .resume.classic .resume-contact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        .resume.classic .resume-contact span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .resume.classic .resume-body { padding: 25px; }
+        .resume.classic .resume-section { margin-bottom: 20px; }
+        .resume.classic .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e3a5f;
+            border-bottom: 2px solid #1e3a5f;
+            padding-bottom: 5px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .resume.classic .summary-text { font-size: 11px; line-height: 1.7; color: #555; }
+        .resume.classic .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .resume.classic .skill-tag {
+            background: #e8f0f8;
+            color: #1e3a5f;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .resume.classic .exp-item, .resume.classic .edu-item { margin-bottom: 12px; }
+        .resume.classic .exp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+        .resume.classic .exp-company { font-weight: 700; color: #1e3a5f; font-size: 12px; }
+        .resume.classic .exp-period { font-size: 10px; color: #888; }
+        .resume.classic .exp-position { font-size: 11px; color: #555; margin-bottom: 5px; }
+        .resume.classic .exp-desc { font-size: 10px; color: #666; }
+        .resume.classic .edu-school { font-weight: 700; color: #1e3a5f; font-size: 12px; }
+        .resume.classic .edu-info { font-size: 10px; color: #555; }
+        /* Minimal Template */
+        .resume.minimal { font-family: 'Noto Sans SC', sans-serif; }
+        .resume.minimal .resume-header {
+            padding: 35px 30px;
+            border-bottom: 1px solid #eee;
+        }
+        .resume.minimal .resume-name { font-size: 26px; font-weight: 300; color: #222; margin-bottom: 5px; }
+        .resume.minimal .resume-title { font-size: 13px; color: #10b981; font-weight: 500; margin-bottom: 15px; }
+        .resume.minimal .resume-contact { display: flex; gap: 20px; font-size: 10px; color: #888; }
+        .resume.minimal .resume-body { padding: 25px 30px; }
+        .resume.minimal .resume-section { margin-bottom: 22px; }
+        .resume.minimal .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #10b981;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .resume.minimal .summary-text { font-size: 11px; line-height: 1.8; color: #666; }
+        .resume.minimal .skill-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+        .resume.minimal .skill-tag {
+            color: #666;
+            font-size: 10px;
+            padding: 4px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        .resume.minimal .exp-item, .resume.minimal .edu-item { margin-bottom: 15px; }
+        .resume.minimal .exp-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .resume.minimal .exp-company { font-weight: 600; font-size: 12px; color: #222; }
+        .resume.minimal .exp-period { font-size: 10px; color: #aaa; }
+        .resume.minimal .exp-position { font-size: 11px; color: #10b981; margin-bottom: 6px; }
+        .resume.minimal .exp-desc { font-size: 10px; color: #666; }
+        .resume.minimal .edu-school { font-weight: 600; font-size: 12px; color: #222; }
+        .resume.minimal .edu-info { font-size: 10px; color: #888; }
+        /* Tech Template */
+        .resume.tech { font-family: 'JetBrains Mono', monospace; background: #0d1117; color: #c9d1d9; }
+        .resume.tech .resume-header {
+            background: linear-gradient(90deg, #161b22 0%, #0d1117 100%);
+            padding: 30px;
+            border-bottom: 1px solid #30363d;
+        }
+        .resume.tech .resume-name { font-size: 24px; font-weight: 700; color: #58a6ff; margin-bottom: 5px; }
+        .resume.tech .resume-title { font-size: 12px; color: #8b949e; margin-bottom: 15px; }
+        .resume.tech .resume-contact { display: flex; flex-wrap: wrap; gap: 15px; font-size: 10px; }
+        .resume.tech .resume-contact span { display: flex; align-items: center; gap: 5px; color: #8b949e; }
+        .resume.tech .resume-contact a { color: #58a6ff; text-decoration: none; }
+        .resume.tech .resume-body { padding: 25px; }
+        .resume.tech .resume-section { margin-bottom: 20px; }
+        .resume.tech .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7ee787;
+            border-left: 3px solid #7ee787;
+            padding-left: 10px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .resume.tech .summary-text { font-size: 10px; line-height: 1.7; color: #8b949e; }
+        .resume.tech .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .resume.tech .skill-tag {
+            background: #21262d;
+            color: #f0883e;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 9px;
+            border: 1px solid #30363d;
+        }
+        .resume.tech .exp-item, .resume.tech .edu-item { margin-bottom: 15px; }
+        .resume.tech .exp-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .resume.tech .exp-company { font-weight: 600; color: #58a6ff; font-size: 12px; }
+        .resume.tech .exp-period { font-size: 10px; color: #6e7681; }
+        .resume.tech .exp-position { font-size: 10px; color: #f0883e; margin-bottom: 5px; }
+        .resume.tech .exp-desc { font-size: 9px; color: #8b949e; }
+        .resume.tech .edu-school { font-weight: 600; color: #58a6ff; font-size: 12px; }
+        .resume.tech .edu-info { font-size: 10px; color: #8b949e; }
+        /* Creative Template */
+        .resume.creative { font-family: 'Noto Sans SC', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .resume.creative .resume-header { padding: 30px; color: white; }
+        .resume.creative .resume-name { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+        .resume.creative .resume-title { font-size: 13px; opacity: 0.9; margin-bottom: 15px; }
+        .resume.creative .resume-contact { display: flex; flex-wrap: wrap; gap: 15px; font-size: 10px; }
+        .resume.creative .resume-contact span { display: flex; align-items: center; gap: 5px; }
+        .resume.creative .resume-body { background: white; padding: 25px; }
+        .resume.creative .resume-section { margin-bottom: 20px; }
+        .resume.creative .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .resume.creative .section-title::before {
+            content: '';
+            width: 20px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        .resume.creative .summary-text { font-size: 11px; line-height: 1.7; color: #555; }
+        .resume.creative .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .resume.creative .skill-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+        }
+        .resume.creative .exp-item, .resume.creative .edu-item {
+            margin-bottom: 12px;
+            padding-left: 15px;
+            border-left: 2px solid #e8e4f0;
+        }
+        .resume.creative .exp-company { font-weight: 700; color: #333; font-size: 12px; }
+        .resume.creative .exp-position { font-size: 11px; color: #667eea; margin: 3px 0; }
+        .resume.creative .exp-period { font-size: 10px; color: #888; margin-bottom: 5px; }
+        .resume.creative .exp-desc { font-size: 10px; color: #666; }
+        .resume.creative .edu-school { font-weight: 700; color: #333; font-size: 12px; }
+        .resume.creative .edu-info { font-size: 10px; color: #666; }
+        /* Academic Template */
+        .resume.academic { font-family: 'Noto Sans SC', 'Times New Roman', serif; font-size: 11px; }
+        .resume.academic .resume-header {
+            padding: 30px;
+            border-bottom: 2px solid #1a365d;
+            text-align: center;
+        }
+        .resume.academic .resume-name { font-size: 24px; font-weight: 700; color: #1a365d; margin-bottom: 5px; }
+        .resume.academic .resume-title { font-size: 13px; color: #4a5568; font-style: italic; margin-bottom: 12px; }
+        .resume.academic .resume-contact { display: flex; justify-content: center; gap: 20px; font-size: 10px; color: #718096; }
+        .resume.academic .resume-body { padding: 20px 25px; }
+        .resume.academic .resume-section { margin-bottom: 18px; }
+        .resume.academic .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a365d;
+            text-align: center;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        .resume.academic .summary-text { font-size: 11px; line-height: 1.8; color: #4a5568; text-align: justify; }
+        .resume.academic .skill-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .resume.academic .skill-tag {
+            color: #1a365d;
+            font-size: 10px;
+            padding: 3px 12px;
+            border: 1px solid #1a365d;
+            border-radius: 3px;
+        }
+        .resume.academic .exp-item, .resume.academic .edu-item { margin-bottom: 12px; text-align: justify; }
+        .resume.academic .exp-company { font-weight: 700; color: #1a365d; font-size: 12px; }
+        .resume.academic .exp-position { font-size: 11px; color: #4a5568; font-style: italic; margin: 2px 0; }
+        .resume.academic .exp-period { font-size: 10px; color: #718096; }
+        .resume.academic .exp-desc { font-size: 10px; color: #4a5568; margin-top: 5px; }
+        .resume.academic .edu-school { font-weight: 700; color: #1a365d; font-size: 12px; }
+        .resume.academic .edu-info { font-size: 10px; color: #4a5568; }
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title { font-size: 1.25rem; font-weight: 600; }
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+        .modal-body { padding: 1.5rem; }
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .modal-btn.secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .modal-btn.primary {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+        }
+        .ai-options { display: grid; gap: 1rem; margin-bottom: 1.5rem; }
+        .ai-option {
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .ai-option:hover {
+            border-color: var(--accent-primary);
+            background: rgba(67, 97, 238, 0.05);
+        }
+        .ai-option.selected {
+            border-color: var(--accent-primary);
+            background: rgba(67, 97, 238, 0.1);
+        }
+        .ai-option-title { font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .ai-option-desc { font-size: 0.875rem; color: var(--text-secondary); }
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .toast {
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateX(120%);
+            animation: slideIn 0.3s ease forwards;
+        }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        @keyframes slideIn { to { transform: translateX(0); } }
+        /* Print */
+        @media print {
+            body { background: white; }
+            .header, .editor-panel, .preview-actions { display: none !important; }
+            .main-container { display: block; padding: 0; margin: 0; }
+            .preview-panel { background: none; padding: 0; }
+            .preview-container { max-width: none; box-shadow: none; aspect-ratio: auto; }
+        }
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container { grid-template-columns: 1fr; }
+            .template-selector { display: none; }
+        }
+        @media (max-width: 640px) {
+            .header { padding: 1rem; }
+            .main-container { padding: 1rem; margin: 1rem auto; }
+            .editor-panel, .preview-panel { padding: 1.25rem; }
+        }
+        .loading { display: flex; align-items: center; gap: 0.5rem; }
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        .example-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        .example-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        /* GitHub Corner */
+        .github-corner {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .github-corner svg {
+            width: 80px;
+            height: 80px;
+            fill: var(--accent-primary);
+            transition: all 0.3s ease;
+        }
+        .github-corner:hover svg { transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <!-- GitHub Corner -->
+    <a href="https://github.com/ASJ-Alita/resume-builder" target="_blank" class="github-corner">
+        <svg viewBox="0 0 250 250">
+            <path d="M0,0 L115,115 C15,85 5,55 0,0 Z"/>
+            <path fill="white" d="M128,3 C94,3 65,32 65,66 L65,85 L50,85 C46,85 42,89 42,93 L42,120 L36,120 C32,120 28,124 28,128 L28,150 L22,150 C18,150 14,154 14,158 L14,190 C14,194 18,198 22,198 L35,198 C39,198 43,194 43,190 L43,158 L65,158 C70,196 100,217 128,217 C161,217 195,186 195,146 L195,66 C195,32 166,3 128,3 Z"/>
+        </svg>
+    </a>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="#" class="logo">
+                <div class="logo-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
+                <span>AI简历生成器</span>
+            </a>
+            <div class="template-selector">
+                <button class="template-btn active" data-template="classic">经典商务</button>
+                <button class="template-btn" data-template="minimal">简约清新</button>
+                <button class="template-btn" data-template="tech">技术极客</button>
+                <button class="template-btn" data-template="creative">创意活力</button>
+                <button class="template-btn" data-template="academic">学术专业</button>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" title="切换主题">
+                    <i data-lucide="moon" width="18" height="18"></i>
+                </button>
+                <button class="ai-btn" id="aiBtn">
+                    <i data-lucide="sparkles" width="18" height="18"></i>
+                    AI优化
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="editor-panel">
+            <h2 class="section-title">
+                <i data-lucide="edit-3" width="20" height="20"></i>
+                简历信息
+            </h2>
+            <button class="example-btn" id="loadExample">
+                <i data-lucide="wand-2" width="18" height="18"></i>
+                一键加载示例简历
+            </button>
+            <div class="form-group">
+                <label class="form-label">姓名</label>
+                <input type="text" class="form-input" id="name" placeholder="张三">
+            </div>
+            <div class="form-group">
+                <label class="form-label">职位 / Title</label>
+                <input type="text" class="form-input" id="title" placeholder="前端开发工程师">
+            </div>
+            <div class="form-group">
+                <label class="form-label">个人简介</label>
+                <textarea class="form-input" id="summary" placeholder="2-3行专业描述，突出你的核心优势和价值..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">核心技能</label>
+                <div class="tags-container" id="skillsContainer">
+                    <input type="text" class="tag-input" id="skillInput" placeholder="输入技能按回车添加">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">工作经历</label>
+                <div id="experienceList"></div>
+                <button class="add-btn" id="addExperience">
+                    <i data-lucide="plus" width="18" height="18"></i>
+                    添加工作经历
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">教育背景</label>
+                <div id="educationList"></div>
+                <button class="add-btn" id="addEducation">
+                    <i data-lucide="plus" width="18" height="18"></i>
+                    添加教育背景
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">联系方式</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <input type="email" class="form-input" id="email" placeholder="邮箱">
+                    <input type="tel" class="form-input" id="phone" placeholder="电话">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <input type="url" class="form-input" id="github" placeholder="GitHub链接">
+                    <input type="url" class="form-input" id="linkedin" placeholder="LinkedIn链接">
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <h2 class="section-title">
+                <i data-lucide="eye" width="20" height="20"></i>
+                实时预览
+            </h2>
+            <div class="preview-container" id="previewContainer"></div>
+            <div class="preview-actions">
+                <button class="preview-btn" id="printBtn">
+                    <i data-lucide="printer" width="18" height="18"></i>
+                    打印PDF
+                </button>
+                <button class="preview-btn" id="copyLink">
+                    <i data-lucide="link" width="18" height="18"></i>
+                    复制链接
+                </button>
+                <button class="preview-btn primary" id="downloadJson">
+                    <i data-lucide="download" width="18" height="18"></i>
+                    导出JSON
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- AI Modal -->
+    <div class="modal-overlay" id="aiModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🤖 AI简历优化</h3>
+                <button class="modal-close" id="closeModal">
+                    <i data-lucide="x" width="18" height="18"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">选择你想要AI帮助优化的内容：</p>
+                <div class="ai-options">
+                    <div class="ai-option selected" data-type="summary">
+                        <div class="ai-option-title">
+                            <i data-lucide="file-text" width="18" height="18"></i>
+                            个人简介优化
+                        </div>
+                        <div class="ai-option-desc">根据你的职位，生成专业、吸引人的自我介绍</div>
+                    </div>
+                    <div class="ai-option" data-type="experience">
+                        <div class="ai-option-title">
+                            <i data-lucide="briefcase" width="18" height="18"></i>
+                            工作描述优化
+                        </div>
+                        <div class="ai-option-desc">将平淡的工作内容转化为有影响力的成就描述</div>
+                    </div>
+                    <div class="ai-option" data-type="skills">
+                        <div class="ai-option-title">
+                            <i data-lucide="zap" width="18" height="18"></i>
+                            技能推荐
+                        </div>
+                        <div class="ai-option-desc">根据职位推荐热门技能标签</div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label">目标职位（帮助AI更好理解）</label>
+                    <input type="text" class="form-input" id="targetJob" placeholder="例如：前端开发工程师">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" id="cancelAi">取消</button>
+                <button class="modal-btn primary" id="startAi">
+                    <span class="loading" style="display: none;">
+                        <span class="loading-dot"></span>
+                        <span class="loading-dot"></span>
+                        <span class="loading-dot"></span>
+                    </span>
+                    <span class="btn-text">开始优化</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const state = {
+            template: 'classic',
+            theme: 'light',
+            skills: [],
+            experiences: [],
+            education: [],
+            aiOption: 'summary'
+        };
+
+        lucide.createIcons();
+
+        const elements = {
+            previewContainer: document.getElementById('previewContainer'),
+            name: document.getElementById('name'),
+            title: document.getElementById('title'),
+            summary: document.getElementById('summary'),
+            skillsContainer: document.getElementById('skillsContainer'),
+            skillInput: document.getElementById('skillInput'),
+            experienceList: document.getElementById('experienceList'),
+            educationList: document.getElementById('educationList'),
+            email: document.getElementById('email'),
+            phone: document.getElementById('phone'),
+            github: document.getElementById('github'),
+            linkedin: document.getElementById('linkedin'),
+            aiModal: document.getElementById('aiModal'),
+            toastContainer: document.getElementById('toastContainer')
+        };
+
+        function renderResume() {
+            const data = getFormData();
+            const resumeHTML = getTemplateHTML(data);
+            elements.previewContainer.innerHTML = `<div class="resume ${state.template}">${resumeHTML}</div>`;
+        }
+
+        function getFormData() {
+            return {
+                name: elements.name.value || 'Your Name',
+                title: elements.title.value || 'Position Title',
+                summary: elements.summary.value || 'A brief professional summary...',
+                skills: state.skills,
+                experiences: state.experiences,
+                education: state.education,
+                email: elements.email.value,
+                phone: elements.phone.value,
+                github: elements.github.value,
+                linkedin: elements.linkedin.value
+            };
+        }
+
+        function getTemplateHTML(data) {
+            let contactHTML = '';
+            if (data.email) contactHTML += `<span>📧 ${data.email}</span>`;
+            if (data.phone) contactHTML += `<span>📱 ${data.phone}</span>`;
+            if (data.github) contactHTML += `<span>💻 ${data.github}</span>`;
+            if (data.linkedin) contactHTML += `<span>🔗 ${data.linkedin}</span>`;
+
+            let skillsHTML = data.skills.map(s => `<span class="skill-tag">${s}</span>`).join('');
+            let experienceHTML = data.experiences.map(exp => `
+                <div class="exp-item">
+                    <div class="exp-header">
+                        <span class="exp-company">${exp.company || '公司名称'}</span>
+                        <span class="exp-period">${exp.period || '时间'}</span>
+                    </div>
+                    <div class="exp-position">${exp.position || '职位'}</div>
+                    <div class="exp-desc">${exp.description || '工作描述...'}</div>
+                </div>
+            `).join('') || '<div class="exp-item"><div class="exp-company">公司名称</div><div class="exp-position">职位</div><div class="exp-period">2020 - 至今</div><div class="exp-desc">工作描述...</div></div>';
+
+            let educationHTML = data.education.map(edu => `
+                <div class="edu-item">
+                    <div class="edu-school">${edu.school || '学校名称'}</div>
+                    <div class="edu-info">${edu.major || '专业'} · ${edu.degree || '学位'} · ${edu.period || '时间'}</div>
+                </div>
+            `).join('') || '<div class="edu-item"><div class="edu-school">学校名称</div><div class="edu-info">专业 · 学位 · 2020</div></div>';
+
+            return `
+                <div class="resume-header">
+                    <div class="resume-name">${data.name}</div>
+                    <div class="resume-title">${data.title}</div>
+                    <div class="resume-contact">${contactHTML}</div>
+                </div>
+                <div class="resume-body">
+                    <div class="resume-section">
+                        <div class="section-title">关于我</div>
+                        <div class="summary-text">${data.summary}</div>
+                    </div>
+                    <div class="resume-section">
+                        <div class="section-title">核心技能</div>
+                        <div class="skill-tags">${skillsHTML || '<span class="skill-tag">技能1</span><span class="skill-tag">技能2</span>'}</div>
+                    </div>
+                    <div class="resume-section">
+                        <div class="section-title">工作经历</div>
+                        ${experienceHTML}
+                    </div>
+                    <div class="resume-section">
+                        <div class="section-title">教育背景</div>
+                        ${educationHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        function addSkill(skill) {
+            if (skill && !state.skills.includes(skill)) {
+                state.skills.push(skill);
+                renderSkills();
+                renderResume();
+            }
+        }
+
+        function removeSkill(skill) {
+            state.skills = state.skills.filter(s => s !== skill);
+            renderSkills();
+            renderResume();
+        }
+
+        function renderSkills() {
+            const tags = state.skills.map(s => `<span class="tag">${s}<span class="tag-remove" onclick="removeSkill('${s}')">×</span></span>`).join('');
+            elements.skillsContainer.innerHTML = tags + '<input type="text" class="tag-input" id="skillInput" placeholder="输入技能按回车添加">';
+            document.getElementById('skillInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); addSkill(e.target.value.trim()); e.target.value = ''; }
+            });
+        }
+
+        function addExperience() {
+            state.experiences.push({ id: Date.now(), company: '', position: '', period: '', description: '' });
+            renderExperiences();
+        }
+
+        function removeExperience(id) {
+            state.experiences = state.experiences.filter(e => e.id !== id);
+            renderExperiences();
+            renderResume();
+        }
+
+        function updateExperience(id, field, value) {
+            const exp = state.experiences.find(e => e.id === id);
+            if (exp) { exp[field] = value; renderResume(); }
+        }
+
+        function renderExperiences() {
+            elements.experienceList.innerHTML = state.experiences.map((exp, index) => `
+                <div class="entry-card">
+                    <div class="entry-header">
+                        <span class="entry-title">工作经历 ${index + 1}</span>
+                        <button class="entry-btn delete" onclick="removeExperience(${exp.id})"><i data-lucide="trash-2" width="14" height="14"></i></button>
+                    </div>
+                    <div class="form-group"><input type="text" class="form-input" placeholder="公司名称" value="${exp.company}" onchange="updateExperience(${exp.id}, 'company', this.value)"></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group"><input type="text" class="form-input" placeholder="职位" value="${exp.position}" onchange="updateExperience(${exp.id}, 'position', this.value)"></div>
+                        <div class="form-group"><input type="text" class="form-input" placeholder="时间 (如: 2020-至今)" value="${exp.period}" onchange="updateExperience(${exp.id}, 'period', this.value)"></div>
+                    </div>
+                    <div class="form-group"><textarea class="form-input" placeholder="工作描述" onchange="updateExperience(${exp.id}, 'description', this.value)">${exp.description}</textarea></div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addEducation() {
+            state.education.push({ id: Date.now(), school: '', major: '', degree: '', period: '' });
+            renderEducation();
+        }
+
+        function removeEducation(id) {
+            state.education = state.education.filter(e => e.id !== id);
+            renderEducation();
+            renderResume();
+        }
+
+        function updateEducation(id, field, value) {
+            const edu = state.education.find(e => e.id === id);
+            if (edu) { edu[field] = value; renderResume(); }
+        }
+
+        function renderEducation() {
+            elements.educationList.innerHTML = state.education.map((edu, index) => `
+                <div class="entry-card">
+                    <div class="entry-header">
+                        <span class="entry-title">教育背景 ${index + 1}</span>
+                        <button class="entry-btn delete" onclick="removeEducation(${edu.id})"><i data-lucide="trash-2" width="14" height="14"></i></button>
+                    </div>
+                    <div class="form-group"><input type="text" class="form-input" placeholder="学校名称" value="${edu.school}" onchange="updateEducation(${edu.id}, 'school', this.value)"></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group"><input type="text" class="form-input" placeholder="专业" value="${edu.major}" onchange="updateEducation(${edu.id}, 'major', this.value)"></div>
+                        <div class="form-group"><input type="text" class="form-input" placeholder="学位" value="${edu.degree}" onchange="updateEducation(${edu.id}, 'degree', this.value)"></div>
+                    </div>
+                    <div class="form-group"><input type="text" class="form-input" placeholder="时间 (如: 2016-2020)" value="${edu.period}" onchange="updateEducation(${edu.id}, 'period', this.value)"></div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', state.theme);
+            const icon = document.querySelector('#themeToggle i');
+            icon.setAttribute('data-lucide', state.theme === 'light' ? 'moon' : 'sun');
+            lucide.createIcons();
+            localStorage.setItem('resumeBuilderTheme', state.theme);
+        }
+
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.template = btn.dataset.template;
+                renderResume();
+            });
+        });
+
+        document.getElementById('aiBtn').addEventListener('click', () => elements.aiModal.classList.add('active'));
+        document.getElementById('closeModal').addEventListener('click', () => elements.aiModal.classList.remove('active'));
+        document.getElementById('cancelAi').addEventListener('click', () => elements.aiModal.classList.remove('active'));
+
+        document.querySelectorAll('.ai-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.ai-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                state.aiOption = option.dataset.type;
+            });
+        });
+
+        document.getElementById('startAi').addEventListener('click', async () => {
+            const targetJob = document.getElementById('targetJob').value;
+            const btn = document.getElementById('startAi');
+            btn.querySelector('.loading').style.display = 'flex';
+            btn.querySelector('.btn-text').textContent = 'AI生成中...';
+            btn.disabled = true;
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            if (state.aiOption === 'summary') {
+                elements.summary.value = `${targetJob || '专业技术'}，拥有丰富的行业经验。擅长运用先进的技术手段解决复杂问题，具备出色的团队协作能力和项目管理经验。持续学习新技术，追求卓越，致力于为团队创造价值。`;
+                showToast('✨ 个人简介已生成！', 'success');
+            } else if (state.aiOption === 'skills') {
+                const skillsMap = { '前端': ['React', 'Vue.js', 'TypeScript', 'Node.js', 'CSS3', 'Webpack'], '后端': ['Python', 'Java', 'Spring Boot', 'MySQL', 'Redis', 'Docker'], '全栈': ['React', 'Node.js', 'MongoDB', 'Docker', 'AWS', 'GraphQL'], '产品': ['需求分析', '用户研究', 'Axure', '数据分析', '项目管理', 'PRD撰写'], '运营': ['内容运营', '用户增长', '数据分析', '活动策划', '社群运营', '新媒体'] };
+                let skills = skillsMap['全栈'];
+                for (const [key, value] of Object.entries(skillsMap)) { if (targetJob.includes(key)) { skills = value; break; } }
+                skills.forEach(s => addSkill(s));
+                showToast('🎯 技能标签已推荐！', 'success');
+            } else if (state.aiOption === 'experience') {
+                if (state.experiences.length > 0) {
+                    state.experiences[0].description = '• 主导核心功能开发，提升用户体验 30%\n• 优化系统性能，响应时间降低 50%\n• 带领团队完成 5+ 个重要项目交付';
+                    renderExperiences();
+                    showToast('📝 工作描述已优化！', 'success');
+                } else { showToast('⚠️ 请先添加工作经历', 'error'); }
+            }
+
+            btn.querySelector('.loading').style.display = 'none';
+            btn.querySelector('.btn-text').textContent = '开始优化';
+            btn.disabled = false;
+            elements.aiModal.classList.remove('active');
+            renderResume();
+        });
+
+        document.getElementById('loadExample').addEventListener('click', () => {
+            elements.name.value = '李明';
+            elements.title.value = '全栈开发工程师';
+            elements.summary.value = '8年互联网开发经验，专注于Web技术栈。曾主导多个大型项目的架构设计，擅长React生态和Node.js后端开发。热爱技术分享，拥有开源项目Star 2k+。';
+            state.skills = ['React', 'Vue.js', 'TypeScript', 'Node.js', 'Python', 'Docker', 'AWS', 'GraphQL'];
+            renderSkills();
+            state.experiences = [{ id: Date.now(), company: '字节跳动', position: '高级前端工程师', period: '2021 - 至今', description: '• 负责抖音创作者平台核心功能开发\n• 主导前端架构升级，项目打包速度提升60%\n• 推动TypeScript全面落地，代码质量显著提升' }, { id: Date.now() + 1, company: '阿里巴巴', position: '前端开发工程师', period: '2018 - 2021', description: '• 参与淘宝商家后台系统开发\n• 开发可视化搭建平台，提升运营效率40%\n• 主导组件库建设，已在公司内部广泛使用' }];
+            renderExperiences();
+            state.education = [{ id: Date.now(), school: '华南理工大学', major: '计算机科学与技术', degree: '硕士', period: '2015 - 2018' }];
+            renderEducation();
+            elements.email.value = 'liming@example.com';
+            elements.phone.value = '138-0013-8000';
+            elements.github.value = 'github.com/liming';
+            elements.linkedin.value = 'linkedin.com/in/liming';
+            renderResume();
+            showToast('✅ 示例简历已加载！', 'success');
+        });
+
+        document.getElementById('printBtn').addEventListener('click', () => { window.print(); showToast('🖨️ 正在准备打印...', 'success'); });
+
+        document.getElementById('copyLink').addEventListener('click', () => {
+            const data = getFormData();
+            const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+            const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+            navigator.clipboard.writeText(url).then(() => showToast('🔗 链接已复制到剪贴板！', 'success'));
+        });
+
+        document.getElementById('downloadJson').addEventListener('click', () => {
+            const data = getFormData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${data.name || 'resume'}_resume.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📥 JSON文件已下载！', 'success');
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" width="20" height="20"></i><span>${message}</span>`;
+            elements.toastContainer.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => { toast.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function saveToStorage() {
+            const data = getFormData();
+            data.skills = state.skills;
+            data.experiences = state.experiences;
+            data.education = state.education;
+            localStorage.setItem('resumeBuilderData', JSON.stringify(data));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('resumeBuilderData');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    elements.name.value = data.name || '';
+                    elements.title.value = data.title || '';
+                    elements.summary.value = data.summary || '';
+                    state.skills = data.skills || [];
+                    state.experiences = data.experiences || [];
+                    state.education = data.education || [];
+                    elements.email.value = data.email || '';
+                    elements.phone.value = data.phone || '';
+                    elements.github.value = data.github || '';
+                    elements.linkedin.value = data.linkedin || '';
+                } catch (e) { console.error('Failed to load saved data'); }
+            }
+        }
+
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const encoded = params.get('data');
+            if (encoded) {
+                try {
+                    const data = JSON.parse(decodeURIComponent(atob(encoded)));
+                    elements.name.value = data.name || '';
+                    elements.title.value = data.title || '';
+                    elements.summary.value = data.summary || '';
+                    state.skills = data.skills || [];
+                    state.experiences = data.experiences || [];
+                    state.education = data.education || [];
+                    elements.email.value = data.email || '';
+                    elements.phone.value = data.phone || '';
+                    elements.github.value = data.github || '';
+                    elements.linkedin.value = data.linkedin || '';
+                } catch (e) { console.error('Failed to load URL data'); }
+            }
+        }
+
+        let saveTimeout;
+        function debouncedSave() { clearTimeout(saveTimeout); saveTimeout = setTimeout(saveToStorage, 500); }
+        document.querySelectorAll('.form-input').forEach(input => input.addEventListener('input', debouncedSave));
+
+        document.getElementById('addExperience').addEventListener('click', addExperience);
+        document.getElementById('addEducation').addEventListener('click', addEducation);
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        elements.name.addEventListener('input', renderResume);
+        elements.title.addEventListener('input', renderResume);
+        elements.summary.addEventListener('input', renderResume);
+        elements.email.addEventListener('input', renderResume);
+        elements.phone.addEventListener('input', renderResume);
+        elements.github.addEventListener('input', renderResume);
+        elements.linkedin.addEventListener('input', renderResume);
+
+        elements.skillInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); addSkill(e.target.value.trim()); e.target.value = ''; }
+        });
+
+        function init() {
+            const savedTheme = localStorage.getItem('resumeBuilderTheme') || 'light';
+            state.theme = savedTheme;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            loadFromURL();
+            if (!new URLSearchParams(window.location.search).get('data')) { loadFromStorage(); }
+            renderSkills();
+            renderExperiences();
+            renderEducation();
+            renderResume();
+            const icon = document.querySelector('#themeToggle i');
+            icon.setAttribute('data-lucide', savedTheme === 'light' ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+
+        init();
+    </script>
+</body>
+</html>
