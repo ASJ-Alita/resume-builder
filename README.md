@@ -2,7 +2,7 @@
 
 > 用AI和Vibe Coding打造的现代简历生成器，支持多模板、实时预览、AI辅助优化
 
-[在线演示](https://yourusername.github.io/resume-builder) · [快速开始](#-快速开始) · [功能特色](#-功能特色)
+[在线演示](https://ASJ-Alita.github.io/resume-builder) · [快速开始](#-快速开始) · [功能特色](#-功能特色)
 
 ---
 
@@ -48,7 +48,7 @@
 ## 📦 快速开始
 
 ### 方式一：直接使用（推荐）
-1. 打开 [在线演示](https://yourusername.github.io/resume-builder)
+1. 打开 [在线演示](https://ASJ-Alita.github.io/resume-builder)
 2. 选择心仪的模板
 3. 填写简历信息
 4. 导出PDF或生成分享链接
@@ -121,8 +121,8 @@ python -m http.server 8080
 ## 📬 联系作者
 
 - GitHub: [ASJ-Alita](https://github.com/ASJ-Alita)
-- 邮箱：panweiping@example.com
-- B站：[你的B站ID]()
+- 邮箱：524869998@qq.com
+
 
 如果你觉得这个项目有帮助，请帮我点一个 ⭐ Star！
 
